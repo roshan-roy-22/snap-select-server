@@ -168,12 +168,29 @@ exports.deleteNotifation = async (req,res)=>{
         })
     }
 }
-
 exports.getallVendors = async (req,res)=>{
     try {
         const vendor = await photographers.find({status:"approved"})
         res.status(200).send({
             message:"Vendors data fetched succesfully",
+            success:true,
+            data:vendor
+        })
+    } catch (error) {
+        console.log(error);
+        res.status(500).send({
+            message:"Error while fetching",
+            status:false,error
+        })
+    }
+}
+
+exports.viewVendor= async (req,res)=>{
+    const {photographer_id} = req.body
+    try {
+        const vendor = await photographers.findById({_id:photographer_id})
+        res.status(200).send({
+            message:"Fetched Vendor ",
             success:true,
             data:vendor
         })

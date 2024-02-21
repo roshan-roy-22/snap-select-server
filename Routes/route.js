@@ -35,4 +35,6 @@ router.post('/change-acc-status',jwtMiddleware,adminController.changeAccountStat
 
 router.get('/getallvendors',jwtMiddleware,userController.getallVendors)
 
+router.post('/view-vendor',jwtMiddleware,userController.viewVendor)
+
 module.exports = router 
