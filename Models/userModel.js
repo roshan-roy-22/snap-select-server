@@ -13,7 +13,7 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    isDoctor:{
+    isVendor:{
         type:Boolean, 
         default:false
     },

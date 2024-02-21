@@ -74,60 +74,7 @@ exports.userinfo = async (req, res) => {
     }
 };
 
-// exports.applyVendor = async (req, res) => {
-//     console.log("Inside applyVendor");
-
-//     try {
-//         // const {  name, city, state, description, genres } = req.body;
-//         const userId = req.payload
-//         // const coverImage = req.files['coverImage'][0].filename;
-//         // const photos = req.files['photos'].map(file => file.filename);
-
-//         const { name, city, state, description, genres } = req.body;
-//         const coverImage = req.file.filename;
-
-//         const photos = [];
-//         for (const key in req.files) {
-//             if (req.files.hasOwnProperty(key)) {
-//                 req.files[key].forEach(file => {
-//                     photos.push({ category: key, filename: file.filename });
-//                 });
-//             }
-//         }
-
-//         // Create a new photographer instance
-//         const newPhotographer = new photographers({
-//             userId,
-//             name,
-//             city,
-//             state,
-//             description,
-//             genres,
-//             coverImage,
-//             photos,
-//             status: 'pending'
-//         });
-//         await newPhotographer.save();
-//         const adminUser = await users.findOne({ isAdmin: true });
-
-//         const unseenNotification = adminUser.unseenNotification
-//         unseenNotification.push({
-//             message: `${newPhotographer.name} has applied for Vendor 's account`,
-//             type: "new-vendor-request",
-//             data: {
-//                 photographerId: newPhotographer._id,
-//                 name: newPhotographer.name
-//             },
-//             onClickPath: "/admin/photographers"
-//         })
-//         await users.findByIdAndUpdate(adminUser._id, { unseenNotification })
-//     } catch (error) {
-//         console.error("Error getting user info:", error);
-//         res.status(500).send({ success: false, message: "Internal server error" });
-//     }
-// }
-
-// const { validationResult } = require('express-validator');
+;
 
 exports.applyVendor = async (req, res) => {
     console.log("Inside applyVendor");
@@ -173,3 +120,68 @@ exports.applyVendor = async (req, res) => {
         res.status(500).json({ success: false, message: "Internal server error" });
     }
 };
+
+exports.notificationSeen = async (req,res)=>{
+    const userId = req.payload;
+    try {
+        const user = await users.findOne({_id:userId})
+        const unseenNotification=user.unseenNotification;
+       const seenNotification=user.seenNotifation;
+       seenNotification.push(...unseenNotification);
+       user.unseenNotification=[];
+       user.seenNotifation=seenNotification
+        const updateUser= await user.save();
+        updateUser.password=undefined
+        res.status(200).send({
+            success:true,
+            message:"All notification are marked as seen",
+            data:updateUser 
+        })
+    } catch (error) {
+        console.log(error);
+        res.status(500).send({
+            message:"Error while marking"
+            ,success:false,
+            error
+        })
+    }
+}
+
+exports.deleteNotifation = async (req,res)=>{
+    const userId = req.payload;
+    try {
+        const user = await users.findOne({_id:userId})
+        user.seenNotifation=[]
+        user.unseenNotification=[]
+        const updateUser= await user.save();
+        res.status(200).send({
+            success:true,
+            message:"All notification are marked as seen",
+            data:updateUser  
+        })
+    } catch (error) {
+        console.log(error);
+        res.status(500).send({
+            message:"Error while marking"
+            ,success:false,
+            error
+        })
+    }
+}
+
+exports.getallVendors = async (req,res)=>{
+    try {
+        const vendor = await photographers.find({status:"approved"})
+        res.status(200).send({
+            message:"Vendors data fetched succesfully",
+            success:true,
+            data:vendor
+        })
+    } catch (error) {
+        console.log(error);
+        res.status(500).send({
+            message:"Error while fetching",
+            status:false,error
+        })
+    }
+}

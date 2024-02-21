@@ -8,6 +8,7 @@ const router = require('./Routes/route');
 app.use(cors());
 app.use(express.json());
 app.use(router); // Pass the router instance directly to app.use()
+app.use('/uploads',express.static('./uploads'))
 
 
 const PORT = process.env.PORT || 3000;

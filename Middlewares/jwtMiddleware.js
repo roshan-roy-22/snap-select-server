@@ -8,6 +8,7 @@ const jwtMiddleware = (req, res, next) => {
         if (token) {
             const jwtResponse = jwt.verify(token, process.env.JWT_SECRET, { expiresIn: '1d' });
             req.payload = jwtResponse.userId;
+            console.log("Before next");
             next();
         } else {
             res.status(401).json({ error: "Authorization token not provided" });
