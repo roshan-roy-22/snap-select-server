@@ -37,4 +37,13 @@ router.get('/getallvendors',jwtMiddleware,userController.getallVendors)
 
 router.post('/view-vendor',jwtMiddleware,userController.viewVendor)
 
-module.exports = router 
+router.post('/book-vendor',jwtMiddleware,userController.bookings)
+
+router.get('/user-bookings',jwtMiddleware,userController.bookingByuser)
+
+router.get('/vendor-bookings',jwtMiddleware,userController.bookingsForVendor)
+
+router.post('/change-bookings-status',jwtMiddleware,userController.changebookingStatus)
+
+
+module.exports = router  

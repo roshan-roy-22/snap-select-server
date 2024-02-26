@@ -2,6 +2,8 @@ const users = require("../Models/userModel");
 const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken');
 const photographers = require("../Models/photographerModel");
+const bookings = require("../Models/bookingModel");
+// const bookings = require("../Models/bookingModel");
 
 
 exports.register = async (req, res) => {
@@ -19,7 +21,7 @@ exports.register = async (req, res) => {
                 password: hashedPassword // Corrected assignment
             });
             await newUser.save();
-            res.status(200).json(newUser);
+            res.status(200).json(newUser); 
         }
     } catch (error) {
         console.error("Error registering user:", error);
@@ -52,6 +54,7 @@ exports.login = async (req, res) => {
     }
 };
 
+//get user info for all
 exports.userinfo = async (req, res) => {
     const userId = req.payload;
     try {
@@ -75,7 +78,7 @@ exports.userinfo = async (req, res) => {
 };
 
 ;
-
+//apply for vendor for user
 exports.applyVendor = async (req, res) => {
     console.log("Inside applyVendor");
 
@@ -85,7 +88,7 @@ exports.applyVendor = async (req, res) => {
         console.log("Hey vendor");
         console.log(genres);
         console.log(req.files);
-        const {coverImage,photos}=req.files
+        const { coverImage, photos } = req.files
 
         // Create a new photographer instance
         const newPhotographer = new photographers({
@@ -110,7 +113,7 @@ exports.applyVendor = async (req, res) => {
                 photographerId: newPhotographer._id,
                 name: newPhotographer.name
             },
-            onClickPath: "/admin/photographers"
+            onClickPath: "/admin-photographerlist"
         });
         await adminUser.save();
 
@@ -121,84 +124,188 @@ exports.applyVendor = async (req, res) => {
     }
 };
 
-exports.notificationSeen = async (req,res)=>{
+//for all
+exports.notificationSeen = async (req, res) => {
     const userId = req.payload;
     try {
-        const user = await users.findOne({_id:userId})
-        const unseenNotification=user.unseenNotification;
-       const seenNotification=user.seenNotifation;
-       seenNotification.push(...unseenNotification);
-       user.unseenNotification=[];
-       user.seenNotifation=seenNotification
-        const updateUser= await user.save();
-        updateUser.password=undefined
+        const user = await users.findOne({ _id: userId })
+        const unseenNotification = user.unseenNotification;
+        const seenNotification = user.seenNotifation;
+        seenNotification.push(...unseenNotification);
+        user.unseenNotification = [];
+        user.seenNotifation = seenNotification
+        const updateUser = await user.save();
+        updateUser.password = undefined
         res.status(200).send({
-            success:true,
-            message:"All notification are marked as seen",
-            data:updateUser 
+            success: true,
+            message: "All notification are marked as seen",
+            data: updateUser
         })
     } catch (error) {
         console.log(error);
         res.status(500).send({
-            message:"Error while marking"
-            ,success:false,
+            message: "Error while marking"
+            , success: false,
             error
         })
     }
 }
 
-exports.deleteNotifation = async (req,res)=>{
+//for all
+exports.deleteNotifation = async (req, res) => {
     const userId = req.payload;
     try {
-        const user = await users.findOne({_id:userId})
-        user.seenNotifation=[]
-        user.unseenNotification=[]
-        const updateUser= await user.save();
+        const user = await users.findOne({ _id: userId })
+        user.seenNotifation = []
+        user.unseenNotification = []
+        const updateUser = await user.save();
         res.status(200).send({
-            success:true,
-            message:"All notification are marked as seen",
-            data:updateUser  
+            success: true,
+            message: "All notification are marked as seen",
+            data: updateUser
         })
     } catch (error) {
         console.log(error);
         res.status(500).send({
-            message:"Error while marking"
-            ,success:false,
+            message: "Error while marking"
+            , success: false,
             error
         })
     }
 }
-exports.getallVendors = async (req,res)=>{
+
+// for all 
+exports.getallVendors = async (req, res) => {
     try {
-        const vendor = await photographers.find({status:"approved"})
+        const vendor = await photographers.find({ status: "approved" })
         res.status(200).send({
-            message:"Vendors data fetched succesfully",
-            success:true,
-            data:vendor
+            message: "Vendors data fetched succesfully",
+            success: true,
+            data: vendor
         })
     } catch (error) {
         console.log(error);
         res.status(500).send({
-            message:"Error while fetching",
-            status:false,error
+            message: "Error while fetching",
+            status: false, error
         })
     }
 }
 
-exports.viewVendor= async (req,res)=>{
-    const {photographer_id} = req.body
+// for all
+exports.viewVendor = async (req, res) => {
+    const { photographer_id } = req.body
     try {
-        const vendor = await photographers.findById({_id:photographer_id})
+        const vendor = await photographers.findById({ _id: photographer_id })
         res.status(200).send({
-            message:"Fetched Vendor ",
-            success:true,
-            data:vendor
+            message: "Fetched Vendor ",
+            success: true,
+            data: vendor
         })
     } catch (error) {
         console.log(error);
         res.status(500).send({
-            message:"Error while fetching",
-            status:false,error
+            message: "Error while fetching",
+            status: false, error
         })
+    }
+}
+
+// for vendors
+exports.bookings = async (req, res) => {
+    try {
+        req.body.status = "pending";
+        const newbookings = new bookings(req.body);
+        newbookings.save();
+
+        const theUser = await users.findById({ _id: req.body.vendorInfo.userId });
+        theUser.unseenNotification.push({
+            type: "new-booking-request",
+            message: `A new booking request has been made by ${req.body.userInfo.username}`,
+            onClickPath: '/vendor/bookings'
+        })
+
+        await theUser.save();
+        res.status(200).send({
+            message: "Book request has been succesfully",
+            success: true
+        })
+
+    } catch (error) {
+        console.log(error);
+        res.status(500).send({
+            message: "Error while booking",
+            error
+        })
+    }
+}
+
+// for user
+exports.bookingByuser = async (req, res) => {
+    const userId = req.payload;
+    try {
+        const booking = await bookings.find({ userId: userId });
+        res.status(200).send({
+            message: "Bookings fetched succesfully",
+            success: true,
+            data: booking
+        })
+    } catch (error) {
+        console.log(error);
+        res.status(500).send({
+            message: "Error getting appoinments",
+            success: false,
+            error,
+        });
+    }
+}
+
+//for vendor
+exports.bookingsForVendor = async (req, res) => {
+    const userId = req.payload;
+    try {
+        const vendor = await photographers.findOne({ userId })
+        const booking = await bookings.find({ photographerId: vendor._id });
+        res.status(200).send({
+            message: "bookings fetched successfully",
+            success: true,
+            data: booking,
+        })
+    } catch (error) {
+        console.log(error);
+        res.status(500).send({
+            message: "Error getting appoinments",
+            success: false,
+            error,
+        });
+    }
+}
+
+//for vendor
+exports.changebookingStatus = async (req, res) => {
+    const { bookingId, status } = req.body;
+    try {
+        const booking = await bookings.findByIdAndUpdate(bookingId, { status });
+
+        const theuser = await users.findOne({ _id: booking.userId })
+        const unseenNotification = theuser.unseenNotification;
+        unseenNotification.push({
+            type: "booking status changed",
+            message: `Your Booking status has been ${status}`,
+            onClickPath: '/bookings'
+        })
+        await theuser.save();
+
+        res.status(200).send({
+            message: "Booking status updated successfully",
+            success: true,
+        })
+    } catch (error) {
+        console.log(error);
+        res.status(500).send({
+            message: "Error getting appoinments",
+            success: false,
+            error,
+        });
     }
 }
